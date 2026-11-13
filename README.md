@@ -58,13 +58,13 @@ graph TD
     combine --> END
 ```
 
-> Generate this diagram from the live code with `python 3_langgraph_email_english.py --show-graph`.
+> Generate this diagram from the live code with `python langgraph_email_english.py --show-graph`.
 
 ---
 
 ## LangGraph Features Demonstrated
 
-Each feature is marked with a `FEATURE` comment in [`3_langgraph_email_english.py`](3_langgraph_email_english.py).
+Each feature is marked with a `FEATURE` comment in [`langgraph_email_english.py`](langgraph_email_english.py).
 
 | # | Feature | LangGraph API | Role in this project |
 |---|---|---|---|
@@ -111,7 +111,7 @@ python -m venv .venv
 ```
 
 > The script detects a `.venv` folder next to it and re-launches itself with that interpreter, so
-> `python 3_langgraph_email_english.py` works without activating the environment.
+> `python langgraph_email_english.py` works without activating the environment.
 
 ---
 
@@ -120,7 +120,7 @@ python -m venv .venv
 ### Interactive menu
 
 ```bash
-python 3_langgraph_email_english.py
+python langgraph_email_english.py
 ```
 
 ```
@@ -201,13 +201,13 @@ Correcting the same text a second time skips the model entirely:
 ### One-line commands
 
 ```bash
-python 3_langgraph_email_english.py email "ask my manager for next Friday off"
-python 3_langgraph_email_english.py --tone friendly email "invite the team to lunch"
-python 3_langgraph_email_english.py correct "he go to school. me and him is late"
-python 3_langgraph_email_english.py agent "ask my manager for next Friday off"
-python 3_langgraph_email_english.py --yes email "..."          # auto-approve
-python 3_langgraph_email_english.py --think email "..."        # show reasoning
-python 3_langgraph_email_english.py --show-graph               # print Mermaid diagram
+python langgraph_email_english.py email "ask my manager for next Friday off"
+python langgraph_email_english.py --tone friendly email "invite the team to lunch"
+python langgraph_email_english.py correct "he go to school. me and him is late"
+python langgraph_email_english.py agent "ask my manager for next Friday off"
+python langgraph_email_english.py --yes email "..."          # auto-approve
+python langgraph_email_english.py --think email "..."        # show reasoning
+python langgraph_email_english.py --show-graph               # print Mermaid diagram
 ```
 
 ### Options
@@ -361,11 +361,11 @@ Measured on an **Intel Core i7-1165G7, 16 GB RAM, no GPU**, Windows 11, model `q
 
 ```
 langgraph-email-english/
-├── 3_langgraph_email_english.py   # the application
-├── requirements.txt               # pinned dependencies
-├── .gitignore
-├── LICENSE                        # MIT License
-└── README.md
+├── langgraph_email_english.py  # the application
+├── requirements.txt            # pinned dependencies
+├── .gitignore                  # keeps .venv and caches out of Git
+├── LICENSE                     # MIT License
+└── README.md                   # this document
 ```
 
 ---

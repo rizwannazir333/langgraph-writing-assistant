@@ -312,6 +312,10 @@ Measured on an **Intel Core i7-1165G7, 16 GB RAM, no GPU**, Windows 11, model `q
 
 ## Design Decisions
 
+- **A plain-Python guardrail for emails:** small models like to add promises nobody asked for
+  (*"I will ensure my tasks are completed"*). `remove_unrequested_promises()` runs inside the
+  `write` and `agent` nodes and deletes those sentences unless the request itself mentions them: instant, predictable and free, with no
+  extra model call.
 - **Small, single-purpose nodes:** each step does one thing, which makes the workflow easy to read,
   test and rearrange.
 - **Bounded self-review:** `MAX_FIXES = 1` gives the reviewer one chance to send a draft back,

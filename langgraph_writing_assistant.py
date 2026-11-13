@@ -99,6 +99,24 @@ EMAIL_PROMPT = (
 )
 
 
+# Guardrail: small models like to add promises the user never asked for, such as
+# "I will ensure my tasks are completed". Remove those sentences in plain Python
+# (instant, no extra model call) - unless the user's own request mentioned them.
+PROMISES = ("i will ensure", "i'll ensure", "i will make sure", "i'll make sure",
+            "will be available", "remain available", "hand over", "handover")
+
+
+def remove_unrequested_promises(email: str, request: str) -> str:
+    banned = [p for p in PROMISES if p not in request.lower()]
+    lines = []
+    for line in email.splitlines():
+        sentences = re.split(r"(?<=[.!?])\s+", line)
+        kept = [s for s in sentences if not any(p in s.lower() for p in banned)]
+        if kept or not line.strip():          # drop lines that became empty
+            lines.append(" ".join(kept))
+    return "\n".join(lines)
+
+
 def email_prompt(tone: str = "professional") -> str:
     return EMAIL_PROMPT.format(tone=tone, today=date.today().strftime("%A %d %B %Y"))
 
@@ -186,6 +204,12 @@ class State(TypedDict, total=False):
     result: str
 
 
+
+def asked_so_far(state) -> str:
+    """Everything the user has asked for in this conversation."""
+    return " ".join(m.content for m in state["messages"] if isinstance(m, HumanMessage))
+
+
 def make_llm(model: str, think: bool, max_words: int = 600, **extra) -> ChatOllama:
     """The local model. Small context + short answers = fast on a CPU."""
     return ChatOllama(model=model, reasoning=think, temperature=0.3, keep_alive="30m",
@@ -210,6 +234,9 @@ def build_graph(model: str, think: bool):
 
     def write(state):
         reply = writer.invoke(state["messages"])
+        if not reply.tool_calls:                        # a finished draft: apply the guardrail
+            reply = reply.model_copy(update={"content": remove_unrequested_promises(
+                reply.content, asked_so_far(state))})
         return {"messages": [reply], "draft": reply.content.strip()}
 
     def review(state):
@@ -310,7 +337,11 @@ def build_agent(model: str, think: bool):
     llm = make_llm(model, think).bind_tools(TOOLS)
 
     def agent(state: MessagesState):
-        return {"messages": [llm.invoke(state["messages"])]}
+        reply = llm.invoke(state["messages"])
+        if not reply.tool_calls:                        # final answer: apply the guardrail
+            reply = reply.model_copy(update={"content": remove_unrequested_promises(
+                reply.content, asked_so_far(state))})
+        return {"messages": [reply]}
 
     g = StateGraph(MessagesState)          # ready-made state: just a list of messages
     g.add_node("agent", agent)

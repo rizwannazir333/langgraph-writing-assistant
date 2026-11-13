@@ -7,6 +7,7 @@
 ![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-000000)
 ![Model](https://img.shields.io/badge/model-qwen3.5%3A4b%20(Q4__K__M)-6E40C9)
 ![API](https://img.shields.io/badge/API%20key-not%20required-success)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 > **Series: Building the same AI app three ways**
 > [Part 1: Plain Ollama](https://github.com/rizwannazir333/ollama-email-english) · [Part 2: LangChain](https://github.com/rizwannazir333/langchain-email-english) · **Part 3: LangGraph** (this repo)
@@ -363,6 +364,7 @@ langgraph-email-english/
 ├── 3_langgraph_email_english.py   # the application
 ├── requirements.txt               # pinned dependencies
 ├── .gitignore
+├── LICENSE                        # MIT License
 └── README.md
 ```
 
@@ -383,6 +385,13 @@ langgraph-email-english/
 **Rule of thumb:** start with the simplest tool that solves the problem. Reach for LangChain when you
 need reusable prompts and structured output, and for LangGraph when your application must **decide,
 loop or wait for a human**.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE). You are free to use, modify and share this
+project, including in your own courses and classrooms, as long as the copyright notice is kept.
 
 ---
 

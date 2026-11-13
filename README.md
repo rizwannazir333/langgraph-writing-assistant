@@ -1,4 +1,4 @@
-# LangGraph Writing Assistant
+# LangGraph Writing Assistant: Self-Reviewing Email Workflow & Parallel Grammar Correction
 
 **A private, offline AI writing assistant built as a LangGraph workflow: it drafts, reviews and fixes its own work, pauses for human approval, corrects sentences in parallel and caches results, all on a local model.**
 

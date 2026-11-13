@@ -1,5 +1,6 @@
 """
-LangGraph Writing Assistant (Part 3 of 3: LangGraph)
+LangGraph Writing Assistant: Self-Reviewing Email Workflow & Parallel Grammar Correction
+   (Part 3 of 3: LangGraph)
    Drafts professional emails and corrects English grammar.
    Runs 100% on your computer with a 4-bit quantized model. No external API.
 

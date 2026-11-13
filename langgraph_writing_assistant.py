@@ -1,5 +1,5 @@
 """
-LangGraph Email & English Assistant (Part 3 of 3: LangGraph)
+LangGraph Writing Assistant (Part 3 of 3: LangGraph)
    Drafts professional emails and corrects English grammar.
    Runs 100% on your computer with a 4-bit quantized model. No external API.
 
@@ -34,14 +34,14 @@ LangGraph features used here (search for "FEATURE"):
    13. Time travel       - list every saved step of the last run (menu: h)
 
 Run:
-    python langgraph_email_english.py                          # menu
-    python langgraph_email_english.py email "ask boss for next Friday off"
-    python langgraph_email_english.py correct "he go to school. me and him is late"
-    python langgraph_email_english.py agent "ask boss for next Friday off"
-    python langgraph_email_english.py --tone friendly email "invite team to lunch"
-    python langgraph_email_english.py --yes email "..."        # don't ask, approve
-    python langgraph_email_english.py --think email "..."     # show thinking (slower)
-    python langgraph_email_english.py --show-graph             # print the diagram
+    python langgraph_writing_assistant.py                          # menu
+    python langgraph_writing_assistant.py email "ask boss for next Friday off"
+    python langgraph_writing_assistant.py correct "he go to school. me and him is late"
+    python langgraph_writing_assistant.py agent "ask boss for next Friday off"
+    python langgraph_writing_assistant.py --tone friendly email "invite team to lunch"
+    python langgraph_writing_assistant.py --yes email "..."        # don't ask, approve
+    python langgraph_writing_assistant.py --think email "..."     # show thinking (slower)
+    python langgraph_writing_assistant.py --show-graph             # print the diagram
 """
 
 import os

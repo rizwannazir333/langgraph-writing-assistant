@@ -1,8 +1,8 @@
-# LangGraph Email & English Assistant
+# LangGraph Writing Assistant
 
 **A private, offline AI writing assistant built as a LangGraph workflow: it drafts, reviews and fixes its own work, pauses for human approval, corrects sentences in parallel and caches results, all on a local model.**
 
-[![CI](https://github.com/rizwannazir333/langgraph-email-english/actions/workflows/ci.yml/badge.svg)](https://github.com/rizwannazir333/langgraph-email-english/actions/workflows/ci.yml)
+[![CI](https://github.com/rizwannazir333/langgraph-writing-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/rizwannazir333/langgraph-writing-assistant/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.2-1C3C3C)
 ![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-000000)
@@ -11,13 +11,13 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 > **Series: Building the same AI app three ways**
-> [Part 1: Plain Ollama](https://github.com/rizwannazir333/ollama-email-english) · [Part 2: LangChain](https://github.com/rizwannazir333/langchain-email-english) · **Part 3: LangGraph** (this repo)
+> [Part 1: Plain Ollama](https://github.com/rizwannazir333/ollama-writing-assistant) · [Part 2: LangChain](https://github.com/rizwannazir333/langchain-writing-assistant) · **Part 3: LangGraph** (this repo)
 
 ---
 
 ## Overview
 
-Parts [1](https://github.com/rizwannazir333/ollama-email-english) and [2](https://github.com/rizwannazir333/langchain-email-english)
+Parts [1](https://github.com/rizwannazir333/ollama-writing-assistant) and [2](https://github.com/rizwannazir333/langchain-writing-assistant)
 of this series run in a straight line: input → model → output. Real-world AI applications need more than
 that. They must **check their own work**, **retry when something is wrong**, **wait for a person to approve**,
 and **split large jobs into smaller parallel ones**.
@@ -59,13 +59,13 @@ graph TD
     combine --> END
 ```
 
-> Generate this diagram from the live code with `python langgraph_email_english.py --show-graph`.
+> Generate this diagram from the live code with `python langgraph_writing_assistant.py --show-graph`.
 
 ---
 
 ## LangGraph Features Demonstrated
 
-Each feature is marked with a `FEATURE` comment in [`langgraph_email_english.py`](langgraph_email_english.py).
+Each feature is marked with a `FEATURE` comment in [`langgraph_writing_assistant.py`](langgraph_writing_assistant.py).
 
 | # | Feature | LangGraph API | Role in this project |
 |---|---|---|---|
@@ -100,8 +100,8 @@ Each feature is marked with a `FEATURE` comment in [`langgraph_email_english.py`
 ollama pull qwen3.5:4b
 
 # 2. Clone the repository
-git clone https://github.com/rizwannazir333/langgraph-email-english.git
-cd langgraph-email-english
+git clone https://github.com/rizwannazir333/langgraph-writing-assistant.git
+cd langgraph-writing-assistant
 
 # 3. Create a virtual environment and install dependencies
 python -m venv .venv
@@ -112,7 +112,7 @@ python -m venv .venv
 ```
 
 > The script detects a `.venv` folder next to it and re-launches itself with that interpreter, so
-> `python langgraph_email_english.py` works without activating the environment.
+> `python langgraph_writing_assistant.py` works without activating the environment.
 
 ---
 
@@ -121,7 +121,7 @@ python -m venv .venv
 ### Interactive menu
 
 ```bash
-python langgraph_email_english.py
+python langgraph_writing_assistant.py
 ```
 
 ```
@@ -202,13 +202,13 @@ Correcting the same text a second time skips the model entirely:
 ### One-line commands
 
 ```bash
-python langgraph_email_english.py email "ask my manager for next Friday off"
-python langgraph_email_english.py --tone friendly email "invite the team to lunch"
-python langgraph_email_english.py correct "he go to school. me and him is late"
-python langgraph_email_english.py agent "ask my manager for next Friday off"
-python langgraph_email_english.py --yes email "..."          # auto-approve
-python langgraph_email_english.py --think email "..."        # show reasoning
-python langgraph_email_english.py --show-graph               # print Mermaid diagram
+python langgraph_writing_assistant.py email "ask my manager for next Friday off"
+python langgraph_writing_assistant.py --tone friendly email "invite the team to lunch"
+python langgraph_writing_assistant.py correct "he go to school. me and him is late"
+python langgraph_writing_assistant.py agent "ask my manager for next Friday off"
+python langgraph_writing_assistant.py --yes email "..."          # auto-approve
+python langgraph_writing_assistant.py --think email "..."        # show reasoning
+python langgraph_writing_assistant.py --show-graph               # print Mermaid diagram
 ```
 
 ### Options
@@ -361,8 +361,8 @@ Measured on an **Intel Core i7-1165G7, 16 GB RAM, no GPU**, Windows 11, model `q
 ## Project Structure
 
 ```
-langgraph-email-english/
-├── langgraph_email_english.py  # the application
+langgraph-writing-assistant/
+├── langgraph_writing_assistant.py  # the application
 ├── requirements.txt            # pinned dependencies
 ├── .gitignore                  # keeps .venv and caches out of Git
 ├── LICENSE                     # MIT License
@@ -373,7 +373,7 @@ langgraph-email-english/
 
 ## The Full Series
 
-| | [Plain Ollama](https://github.com/rizwannazir333/ollama-email-english) | [LangChain](https://github.com/rizwannazir333/langchain-email-english) | **LangGraph** |
+| | [Plain Ollama](https://github.com/rizwannazir333/ollama-writing-assistant) | [LangChain](https://github.com/rizwannazir333/langchain-writing-assistant) | **LangGraph** |
 |---|---|---|---|
 | Best for | Learning, small scripts | Linear pipelines | Workflows with decisions, loops, approvals |
 | Memory | Manual | Message history | Built-in checkpointer |
@@ -401,4 +401,4 @@ project, including in your own courses and classrooms, as long as the copyright 
 Created and maintained by **[@rizwannazir333](https://github.com/rizwannazir333)**.
 
 If this project helped you learn, please consider giving it a ⭐. Questions, suggestions and
-improvements are welcome through [Issues](https://github.com/rizwannazir333/langgraph-email-english/issues).
+improvements are welcome through [Issues](https://github.com/rizwannazir333/langgraph-writing-assistant/issues).

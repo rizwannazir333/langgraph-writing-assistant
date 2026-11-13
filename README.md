@@ -1,21 +1,41 @@
-# Part 3: Local AI Writing Assistant with LangGraph
+# LangGraph Email & English Assistant
 
-> **Series:** [Part 1: Ollama](https://github.com/rizwannazir333/ollama-email-english) · [Part 2: LangChain](https://github.com/rizwannazir333/langchain-email-english) · **Part 3: LangGraph**
+**A private, offline AI writing assistant built as a LangGraph workflow: it drafts, reviews and fixes its own work, pauses for human approval, corrects sentences in parallel and caches results, all on a local model.**
 
-Build an **email writer** and an **English grammar checker** that run **100% on your own computer**.
-No API key, no internet, no cost.
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-1.2-1C3C3C)
+![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-000000)
+![Model](https://img.shields.io/badge/model-qwen3.5%3A4b%20(Q4__K__M)-6E40C9)
+![API](https://img.shields.io/badge/API%20key-not%20required-success)
 
-In Parts 1 and 2 our programs ran in a **straight line**. Real work is not like that: we **check**
-our work, **fix** mistakes, **ask someone** before sending, and **split** big jobs into small ones.
-**LangGraph** lets you draw your program as a **graph** that can do all of this.
-
-- **Nodes** = steps (plain Python functions)
-- **Edges** = arrows between steps
-- **State** = a shared dictionary that every step can read and update
+> **Series: Building the same AI app three ways**
+> [Part 1: Plain Ollama](https://github.com/rizwannazir333/ollama-email-english) · [Part 2: LangChain](https://github.com/rizwannazir333/langchain-email-english) · **Part 3: LangGraph** (this repo)
 
 ---
 
-## The graph of this project
+## Overview
+
+Parts [1](https://github.com/rizwannazir333/ollama-email-english) and [2](https://github.com/rizwannazir333/langchain-email-english)
+of this series run in a straight line: input → model → output. Real-world AI applications need more than
+that. They must **check their own work**, **retry when something is wrong**, **wait for a person to approve**,
+and **split large jobs into smaller parallel ones**.
+
+In this final part, I rebuild the same email and grammar assistant as a **LangGraph state machine**.
+The program is expressed as a graph of small Python functions (nodes) connected by edges, sharing a
+single state. This repository demonstrates **thirteen LangGraph features** in one readable file:
+
+- **Email workflow:** draft → look up real dates with tools → AI self-review → automatic fix →
+  **human approval** → done, or rewrite with your feedback.
+- **Conversational revision:** continue the same saved thread to revise the last email.
+- **Parallel correction:** every sentence is corrected in its own branch, then merged.
+- **Caching:** repeated work is returned instantly with no model call.
+- **A hand-built agent:** see exactly how a tool-calling agent loop works inside.
+
+Everything runs locally on a 4-bit quantized model. **No API key, no cloud, no data leaves your machine.**
+
+---
+
+## Workflow Graph
 
 ```mermaid
 graph TD
@@ -24,90 +44,79 @@ graph TD
     START -->|correct| split
     start_email --> write
     revise --> write
-    write -->|needs a date| tools
+    write -->|tool call| tools
     tools --> write
     write -->|draft ready| review
     review -->|problems found| fix
     fix --> write
-    review -->|looks good| ask_human
-    ask_human -->|you type a change| write
-    ask_human -->|you press Enter| END([end])
-    split -->|one branch per sentence| correct_one
+    review -->|approved by AI| ask_human
+    ask_human -->|feedback| write
+    ask_human -->|approved| END([end])
+    split -->|Send: one branch per sentence| correct_one
     correct_one --> combine
     combine --> END
 ```
 
-**In words:**
-- **Email:** write → (look up a date if needed) → an AI **reviewer** checks the draft →
-  fix it once if needed → **pause and ask you** → done, or rewrite with your change.
-- **Correct:** split the text into sentences → correct **each sentence in its own branch** → combine.
-
-> Run `python 3_langgraph_email_english.py --show-graph` to print this diagram from the real code.
+> Generate this diagram from the live code with `python 3_langgraph_email_english.py --show-graph`.
 
 ---
 
-## What you will learn: 13 LangGraph features
+## LangGraph Features Demonstrated
 
-| # | Feature | What it does in this project |
-|---|---|---|
-| 1 | State | One shared dict: `text`, `draft`, `messages`, `result`... |
-| 2 | Nodes + edges | Steps (`write`, `review`, ...) and the arrows between them |
-| 3 | Conditional edges | A function picks the next step (email? revise? correct?) |
-| 4 | Loop | `write → review → fix → write`: the AI improves its own work |
-| 5 | Tools | `ToolNode` + `tools_condition`: look up real dates |
-| 6 | Human-in-the-loop | `interrupt()` **pauses** the graph until you approve |
-| 7 | Memory | `InMemorySaver` + `thread_id`: pause/resume, revise the last email |
-| 8 | Parallel (`Send`) | Each sentence is corrected in its own branch |
-| 9 | Retry | `RetryPolicy`: a failed step is tried again automatically |
-| 10 | Streaming | You see `[step done: ...]` as each step finishes |
-| 11 | Agent by hand | A tiny graph: model ↔ tools in a loop (menu option 5) |
-| 12 | Cache | Correct the same sentence again and the answer is **instant (0 s)** |
-| 13 | Time travel | Menu `h` lists every saved step of the last run |
+Each feature is marked with a `FEATURE` comment in [`3_langgraph_email_english.py`](3_langgraph_email_english.py).
 
-> **Teacher's tip:** open [`3_langgraph_email_english.py`](3_langgraph_email_english.py) and search for
-> `FEATURE`. Every feature is marked right where it happens in the code.
-
----
-
-## 1. What you need
-
-- A computer with **8 GB RAM or more** (16 GB recommended). **No graphics card needed.**
-- **Python 3.10 or newer** ([python.org](https://www.python.org/downloads/))
-- **Ollama**, free, runs AI models on your computer ([ollama.com/download](https://ollama.com/download))
-- About **4 GB of free disk space** for the model
+| # | Feature | LangGraph API | Role in this project |
+|---|---|---|---|
+| 1 | Typed state | `TypedDict` + reducers | Shared state with `add_messages` / `operator.add` merging |
+| 2 | Nodes & edges | `StateGraph.add_node / add_edge` | Each step is a plain Python function |
+| 3 | Conditional routing | `add_conditional_edges` | Route by task; decide fix vs. approve |
+| 4 | Cycles | edge back to `write` | Self-review loop: write → review → fix → write |
+| 5 | Tools | `ToolNode` + `tools_condition` | Resolve *"next Friday"* to a real date |
+| 6 | Human-in-the-loop | `interrupt()` | Pause for approval or feedback |
+| 7 | Persistence | `InMemorySaver` + `thread_id` | Pause/resume and conversational revision |
+| 8 | Map-reduce | `Send` | Correct sentences in parallel branches |
+| 9 | Fault tolerance | `RetryPolicy` | Automatically retry failed model steps |
+| 10 | Streaming | `stream_mode="updates"` | Progress reported as each step completes |
+| 11 | Custom agent | `MessagesState` + `ToolNode` | A tool-calling agent built from scratch |
+| 12 | Node caching | `CachePolicy` + `InMemoryCache` | Identical requests return instantly |
+| 13 | Time travel | `get_state_history` | Inspect every saved checkpoint of a run |
 
 ---
 
-## 2. Setup (10 minutes)
+## Getting Started
 
-**Step 1: download the AI model.**
+### Prerequisites
+
+- Python **3.10+**
+- [Ollama](https://ollama.com/download) installed and running
+- **8 GB RAM** minimum (16 GB recommended); **no GPU required**
+
+### Installation
 
 ```bash
+# 1. Download the model (one time, ~3.3 GB)
 ollama pull qwen3.5:4b
-```
 
-**Step 2: get the code.**
-
-```bash
+# 2. Clone the repository
 git clone https://github.com/rizwannazir333/langgraph-email-english.git
 cd langgraph-email-english
-```
 
-**Step 3: create a virtual environment and install the libraries.**
-
-Windows (PowerShell):
-```powershell
+# 3. Create a virtual environment and install dependencies
 python -m venv .venv
+# Windows
 .venv\Scripts\python -m pip install -r requirements.txt
-```
-
-Mac / Linux:
-```bash
-python3 -m venv .venv
+# macOS / Linux
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
-**Step 4: run it.**
+> The script detects a `.venv` folder next to it and re-launches itself with that interpreter, so
+> `python 3_langgraph_email_english.py` works without activating the environment.
+
+---
+
+## Usage
+
+### Interactive menu
 
 ```bash
 python 3_langgraph_email_english.py
@@ -120,97 +129,150 @@ python 3_langgraph_email_english.py
 3) Correct English      4) Correct many lines
 5) Email agent (finds real dates)
 h) Show saved steps of the last run      q) Quit
->
 ```
 
-> New to local AI? The key words (LLM, quantized model, prompt, token) are explained in
-> [Part 1](https://github.com/rizwannazir333/ollama-email-english#3-key-ideas). Tools, agents and
-> structured output are explained in [Part 2](https://github.com/rizwannazir333/langchain-email-english).
+### Example: email with self-review and human approval
+
+```
+> 1
+What should the email say?
+> ask my manager for Friday off for a family event
+Tone (Enter = professional):
+[step done: start_email]
+[step done: write]
+[step done: review]
+
+===== DRAFT =====
+Subject: Request for Time Off - Family Event
+
+Dear [Manager],
+
+I am writing to request time off on Friday, 13 November 2026, to attend a family event. ...
+
+Press Enter to approve, or type a change:
+>
+[step done: ask_human]
+
+===== RESULT =====
+...
+```
+
+When the reviewer finds a problem, you'll see the loop in action:
+
+```
+[step done: review -> problems: Missing date of the new delivery date]
+[step done: fix]
+[step done: write]
+```
+
+### Example: parallel correction
+
+```
+> 3
+Text to correct:
+> he go to school yesterday. me and him is late
+[step done: split]
+[step done: correct_one]
+[step done: correct_one]
+[step done: combine]
+
+===== RESULT =====
+Corrected: He went to school yesterday. He and I are late.
+Changes:
+- go -> went (Changed verb to past tense to match 'yesterday'.)
+- me -> I (Subject pronoun required)
+- him -> He (Subject pronoun required)
+- is -> are (Verb must agree with plural subject 'He and I')
+```
+
+### Example: caching
+
+Correcting the same text a second time skips the model entirely:
+
+```
+[step done: split]
+[step done: correct_one]
+[cache: saved answer reused, no model call]
+[step done: combine]
+(0s)
+```
+
+### One-line commands
+
+```bash
+python 3_langgraph_email_english.py email "ask my manager for next Friday off"
+python 3_langgraph_email_english.py --tone friendly email "invite the team to lunch"
+python 3_langgraph_email_english.py correct "he go to school. me and him is late"
+python 3_langgraph_email_english.py agent "ask my manager for next Friday off"
+python 3_langgraph_email_english.py --yes email "..."          # auto-approve
+python 3_langgraph_email_english.py --think email "..."        # show reasoning
+python 3_langgraph_email_english.py --show-graph               # print Mermaid diagram
+```
+
+### Options
+
+| Option | Description |
+|---|---|
+| `email` / `correct` / `agent` `TEXT` | Run one task and exit |
+| `--tone TONE` | Email tone (default `professional`) |
+| `--yes` | Skip the human approval pause |
+| `--think` | Stream the model's reasoning live (more accurate, much slower on CPU) |
+| `-m MODEL` | Use a specific Ollama model |
+| `--show-graph` | Print the workflow as a Mermaid diagram |
+
+Model selection: first installed of `qwen3.5:4b` → `llama3.2:3b` → `qwen2.5:3b` → `qwen3.5:latest`.
 
 ---
 
-## 3. The lesson: LangGraph step by step
+## Code Walkthrough
 
-### State: the shared notebook
+### State with reducers
 
 ```python
 class State(TypedDict, total=False):
-    task: str                                   # "email", "revise", "correct", "correct_many"
-    text: str                                   # what you typed
-    messages: Annotated[list, add_messages]     # email conversation
+    task: str
+    text: str
+    tone: str
+    messages: Annotated[list, add_messages]     # appended, not replaced
     draft: str
     problems: str
-    corrected: Annotated[list, operator.add]    # results from parallel branches
+    fixes: int
+    sentences: list[str]
+    corrected: Annotated[list, operator.add]    # merged from parallel branches
     result: str
 ```
 
-Every node gets the state and returns **only the fields it wants to change**. `Annotated[..., add_messages]`
-and `Annotated[..., operator.add]` are **reducers**: new values are *added to* the list instead of replacing it.
-
-### Nodes: each step is a plain function
-
-```python
-def write(state):
-    reply = writer.invoke(state["messages"])
-    return {"messages": [reply], "draft": reply.content.strip()}
-```
-
-### Edges: drawing the arrows
+### Wiring the graph
 
 ```python
 g.add_conditional_edges(START, pick_task, ["start_email", "revise", "split"])
 g.add_edge("start_email", "write")
+g.add_edge("revise", "write")
 g.add_conditional_edges("write", tools_condition, {"tools": "tools", END: "review"})
 g.add_edge("tools", "write")
-g.add_conditional_edges("review", fix_or_ask, ["fix", "ask_human"])   # <- the loop
+g.add_conditional_edges("review", fix_or_ask, ["fix", "ask_human"])
 g.add_edge("fix", "write")
+g.add_conditional_edges("ask_human", done_or_rewrite, ["write", END])
+g.add_conditional_edges("split", one_branch_per_sentence, ["correct_one"])
+g.add_edge("correct_one", "combine")
+g.add_edge("combine", END)
+
+graph = g.compile(checkpointer=InMemorySaver(), cache=InMemoryCache())
 ```
 
-A **conditional edge** is a small function that returns the name of the next step:
-
-```python
-def fix_or_ask(state):
-    return "fix" if state["problems"] and state["fixes"] < MAX_FIXES else "ask_human"
-```
-
-### Loop: the AI checks its own work
-
-The `review` node asks the model to check the draft against your instructions. If it finds problems,
-the graph goes to `fix` and back to `write`. `MAX_FIXES = 1` stops it from looping forever.
-
-```
-[step done: write]
-[step done: review -> problems: Missing date of the new delivery date]
-[step done: fix]
-[step done: write]
-[step done: review]
-```
-
-### Human-in-the-loop: the program waits for you
+### Human-in-the-loop
 
 ```python
 def ask_human(state):
-    answer = interrupt(state["draft"])          # the graph PAUSES here
+    answer = interrupt(state["draft"])          # execution pauses; state is checkpointed
     if not answer.strip():
-        return {"result": state["draft"]}       # you pressed Enter: approved
+        return {"result": state["draft"]}       # approved
     return {"messages": [HumanMessage(f"Rewrite the email with this change: {answer}")]}
 ```
 
-The graph **saves its state**, shows you the draft, and later continues with
-`Command(resume=your_answer)`. This is how real AI apps ask *"Are you sure?"* before sending an email.
+The runner resumes the paused thread with `graph.stream(Command(resume=answer), config)`.
 
-### Memory: threads remember everything
-
-```python
-graph = g.compile(checkpointer=InMemorySaver(), cache=InMemoryCache())
-config = {"configurable": {"thread_id": thread_id}}
-```
-
-A **thread_id** is like a conversation ID. The checkpointer saves the state after **every step**.
-That is what makes pausing possible, and why option 2 (*revise last email*) works: it simply
-continues the **same thread**, so the old email is still there.
-
-### Parallel branches with `Send`
+### Map-reduce with `Send`
 
 ```python
 def one_branch_per_sentence(state):
@@ -218,152 +280,115 @@ def one_branch_per_sentence(state):
             for i, s in enumerate(state["sentences"])]
 ```
 
-Three sentences become three `correct_one` steps. Their results are **added together** in
-`corrected` thanks to the `operator.add` reducer, and `combine` puts them back in order.
-
-### Cache: never do the same work twice
+### A tool-calling agent, built by hand
 
 ```python
-g.add_node("correct_one", correct_one, cache_policy=CachePolicy(ttl=3600))
-```
-
-Correct the same sentence twice:
-
-```
-[step done: correct_one]
-[cache: saved answer reused, no model call]
-...
-(0s)
-```
-
-### Agent by hand: how agents really work
-
-```python
-def agent(state: MessagesState):
-    return {"messages": [llm.invoke(state["messages"])]}
-
 g = StateGraph(MessagesState)
-g.add_node("agent", agent)
+g.add_node("agent", agent)                          # model with tools bound
 g.add_node("tools", ToolNode(TOOLS))
 g.add_edge(START, "agent")
-g.add_conditional_edges("agent", tools_condition)   # tool call? -> tools, else -> END
+g.add_conditional_edges("agent", tools_condition)   # tool call → tools, else → END
 g.add_edge("tools", "agent")
 ```
 
-That's all an agent is: **the model and the tools taking turns** until the model answers.
-(In Part 2, `create_agent` built this same loop for us.)
-
-### Time travel: look back at every step
-
-Press `h` in the menu after a run:
-
-```
-step  0 | next: start_email
-step  1 | next: write
-step  2 | next: review
-step  3 | next: ask_human
-step  4 | next: done
-```
-
 ---
 
-## 4. Which tool should I use? (the whole series)
+## Performance
 
-| | [Plain Ollama](https://github.com/rizwannazir333/ollama-email-english) | [LangChain](https://github.com/rizwannazir333/langchain-email-english) | LangGraph |
-|---|---|---|---|
-| **Best for** | Learning, tiny scripts | Straight pipelines | Decisions, loops, approvals |
-| **Memory** | Do it yourself | Message history list | Built-in (checkpointer) |
-| **Tools / agents** | Do it yourself | `create_agent` | `ToolNode` + your own graph |
-| **Human approval** | ✗ | ✗ | ✓ `interrupt()` |
-| **Loops & self-review** | ✗ | Hard | ✓ Easy |
-| **Parallel steps** | ✗ | `batch()` | ✓ `Send` |
-| **Caching** | ✗ | Possible | ✓ `CachePolicy` |
+Measured on an **Intel Core i7-1165G7, 16 GB RAM, no GPU**, Windows 11, model `qwen3.5:4b`, thinking off:
 
-> **Teacher's rule of thumb:** start with the simplest tool that works. Use LangChain for reusable
-> prompts and structured answers. Use LangGraph when your program must **decide, loop, or wait for a human**.
-
----
-
-## 5. Command options
-
-```bash
-python 3_langgraph_email_english.py                                     # menu
-python 3_langgraph_email_english.py email "ask my manager for next Friday off"
-python 3_langgraph_email_english.py --tone friendly email "invite the team to lunch"
-python 3_langgraph_email_english.py correct "he go to school. me and him is late"
-python 3_langgraph_email_english.py agent "ask my manager for next Friday off"
-python 3_langgraph_email_english.py --yes email "..."                   # approve automatically
-python 3_langgraph_email_english.py --think email "..."                 # show thinking (slower)
-python 3_langgraph_email_english.py --show-graph                        # print the diagram
-```
-
-| Option | Meaning |
+| Operation | Time |
 |---|---|
-| `--tone TONE` | Email tone: `friendly`, `formal`, `apologetic`... |
-| `--yes` | Approve the email automatically (no pause) |
-| `--think` | Show the model's thinking live (more accurate, **much slower**) |
-| `-m MODEL` | Use another Ollama model, e.g. `-m llama3.2:3b` |
-| `--show-graph` | Print the graph as a Mermaid diagram (paste it into [mermaid.live](https://mermaid.live)) |
-
-If you don't choose a model, the script uses the **first installed one** from this list:
-`qwen3.5:4b` → `llama3.2:3b` → `qwen2.5:3b` → `qwen3.5:latest`.
+| Draft email (write + review + approval) | **30–65 s** |
+| Revise last email | **~35 s** |
+| Correct text (per run) | **25–45 s** |
+| Correct the same text again (cached) | **0 s** |
+| Correct many lines (2 lines) | **~25 s** |
+| Agent email | **~15 s** |
 
 ---
 
-## 6. Speed
+## Design Decisions
 
-Tested on a laptop with **no graphics card** (Intel i7, 16 GB RAM):
-
-| Option | Time |
-|---|---|
-| Draft email (write + review + your approval) | 30–65 s |
-| Revise last email | ~35 s |
-| Correct English | 25–45 s, **0 s** if cached |
-| Correct many lines (2 lines) | ~25 s |
-| Email agent | ~15 s |
-
-Speed tricks used: a quantized 4B model, **thinking off by default**, small context (`num_ctx=2048`),
-short answers, `keep_alive="30m"`, and the cache.
-
-> **Honest note:** small models make mistakes. The reviewer doesn't catch everything. **Always read an
-> AI email before you send it**, and use the approval step to fix it.
+- **Small, single-purpose nodes:** each step does one thing, which makes the workflow easy to read,
+  test and rearrange.
+- **Bounded self-review:** `MAX_FIXES = 1` gives the reviewer one chance to send a draft back,
+  balancing quality against CPU time.
+- **Human approval before completion:** an AI-written email should never be final without a person
+  seeing it; `interrupt()` makes that a first-class step rather than an afterthought.
+- **Graceful degradation:** if a small model returns malformed JSON, the review is skipped and the
+  original sentence is kept, instead of crashing the workflow.
+- **Caching only where it is safe:** sentence correction is deterministic enough to cache; email
+  writing depends on conversation history and is not cached.
 
 ---
 
-## 7. Exercises
+## Limitations
 
-1. Change `MAX_FIXES` to `2`. What happens to speed and quality?
-2. Add a `translate` node after approval that translates the email into another language.
-3. Add a second human step: *"Send this email? (y/n)"*.
-4. Add a `tone_check` node **in parallel** with `review` (hint: two edges out of `write`).
-5. Make the correction graph skip sentences that are already correct (hint: a conditional edge).
-6. Replace `InMemorySaver` with `SqliteSaver` so your threads survive a restart
-   (install it with `pip install langgraph-checkpoint-sqlite`).
+- The AI reviewer is a small model too; it does not catch every issue. The human approval step is the
+  real safeguard. **Always read an email before sending it.**
+- `InMemorySaver` and `InMemoryCache` are cleared when the program exits.
+- Parallel branches run one at a time on a single local model (`max_concurrency=1`), so the parallelism
+  is structural rather than a speed-up on CPU.
 
 ---
 
-## 8. Troubleshooting
+## Extend It
 
-| Problem | Fix |
+1. Set `MAX_FIXES = 2` and compare quality and runtime.
+2. Add a `translate` node after approval that translates the final email.
+3. Add a `tone_check` node that runs **in parallel** with `review`.
+4. Route sentences that need no changes around the model with a conditional edge.
+5. Replace `InMemorySaver` with `SqliteSaver` (`pip install langgraph-checkpoint-sqlite`) so threads
+   survive restarts.
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
 |---|---|
 | `model "qwen3.5:4b" not found` | Run `ollama pull qwen3.5:4b` |
-| `Connection refused` | Start the Ollama app (or run `ollama serve`) |
-| `ModuleNotFoundError: No module named 'langgraph'` | Do [Setup step 3](#2-setup-10-minutes) |
-| The menu seems to do nothing | Type the **number** first, press Enter, *then* your text |
-| It stops at `===== DRAFT =====` | That's the human-in-the-loop pause: press **Enter** to approve or type a change |
-| Very slow (minutes) | Don't use `--think`, run one script at a time, check `ollama ps` |
+| `Connection refused` | Start the Ollama app, or run `ollama serve` |
+| `ModuleNotFoundError: No module named 'langgraph'` | Complete the installation step |
+| The program stops at `===== DRAFT =====` | That's the approval pause: press **Enter** to approve, or type a change |
+| Very slow responses | Avoid `--think`, run one model at a time (`ollama ps`) |
 
 ---
 
-## Files
+## Project Structure
 
 ```
-.
-├── 3_langgraph_email_english.py   # the app
-├── requirements.txt               # Python libraries (tested versions)
-├── .gitignore                     # keeps .venv and cache files out of Git
-└── README.md                      # this lesson
+langgraph-email-english/
+├── 3_langgraph_email_english.py   # the application
+├── requirements.txt               # pinned dependencies
+├── .gitignore
+└── README.md
 ```
 
-**Previous:** [Part 1: Ollama](https://github.com/rizwannazir333/ollama-email-english) ·
-[Part 2: LangChain](https://github.com/rizwannazir333/langchain-email-english)
+---
+
+## The Full Series
+
+| | [Plain Ollama](https://github.com/rizwannazir333/ollama-email-english) | [LangChain](https://github.com/rizwannazir333/langchain-email-english) | **LangGraph** |
+|---|---|---|---|
+| Best for | Learning, small scripts | Linear pipelines | Workflows with decisions, loops, approvals |
+| Memory | Manual | Message history | Built-in checkpointer |
+| Tools / agents | Manual | `create_agent` | `ToolNode` + custom graph |
+| Human approval | — | — | ✓ `interrupt()` |
+| Self-review loops | — | Difficult | ✓ Native cycles |
+| Parallel steps | — | `.batch()` | ✓ `Send` |
+| Caching | — | Possible | ✓ `CachePolicy` |
+
+**Rule of thumb:** start with the simplest tool that solves the problem. Reach for LangChain when you
+need reusable prompts and structured output, and for LangGraph when your application must **decide,
+loop or wait for a human**.
+
+---
+
+## Author
+
+Created and maintained by **[@rizwannazir333](https://github.com/rizwannazir333)**.
+
+If this project helped you learn, please consider giving it a ⭐. Questions, suggestions and
+improvements are welcome through [Issues](https://github.com/rizwannazir333/langgraph-email-english/issues).

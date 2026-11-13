@@ -2,6 +2,7 @@
 
 **A private, offline AI writing assistant built as a LangGraph workflow: it drafts, reviews and fixes its own work, pauses for human approval, corrects sentences in parallel and caches results, all on a local model.**
 
+[![CI](https://github.com/rizwannazir333/langgraph-email-english/actions/workflows/ci.yml/badge.svg)](https://github.com/rizwannazir333/langgraph-email-english/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-1.2-1C3C3C)
 ![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-000000)
